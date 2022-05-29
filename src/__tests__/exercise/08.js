@@ -6,6 +6,19 @@ import {render, screen, act} from '@testing-library/react'
 import userEvent from '@testing-library/user-event'
 import useCounter from '../../components/use-counter'
 
+// We cannot reassign a variable and expect this binding to update to the same
+// object that we're setting
+// SOLUTION: Create a single object, return that object, and then update itß
+function setup({initialProps} = {}) {
+  let result = {}
+  function TestComponent() {
+    result.current = useCounter(initialProps)
+    return null
+  }
+  render(<TestComponent />)
+  return result
+}
+
 // 🐨 create a simple function component that uses the useCounter hook
 // and then exposes some UI that our test can interact with to test the
 // capabilities of this hook
@@ -15,15 +28,8 @@ import useCounter from '../../components/use-counter'
 test('exposes the count and increment/decrement functions', async () => {
   // Use case: difficult to create a component that resembles the way that
   // people typically use your hook, esp for covering different edge cases
-  let result
-  function TestComponent() {
-    result = useCounter()
-    return null
-  }
-  // 🐨 render the component
-  render(<TestComponent />)
+  const result = setup()
 
-  expect(result.count).toBe(0)
   /**
    * Use act when you are going to trigger an update
    * 
@@ -32,10 +38,11 @@ test('exposes the count and increment/decrement functions', async () => {
    * - No intermediary state where effects haven't been run yet
   
    */
-  act(() => result.increment())
-  expect(result.count).toBe(1)
-  act(() => result.decrement())
-  expect(result.count).toBe(0)
+  expect(result.current.count).toBe(0)
+  act(() => result.current.increment())
+  expect(result.current.count).toBe(1)
+  act(() => result.current.decrement())
+  expect(result.current.count).toBe(0)
   /*
   // 🐨 get the elements you need using screen
   const increment = screen.getByRole('button', {name: /increment/i})
@@ -50,6 +57,40 @@ test('exposes the count and increment/decrement functions', async () => {
   expect(message).toHaveTextContent('Current count: 0')
   // 🐨 interact with the UI using userEvent and assert on the changes in the UI
   */
+})
+
+test('allows customization of the initial count', async () => {
+  // const result = setup({initialProps: {initialCount: 3}})
+  let result
+  function TestComponent() {
+    result = useCounter({initialCount: 3})
+    return null
+  }
+  // 🐨 render the component
+  render(<TestComponent />)
+
+  expect(result.count).toBe(3)
+  act(() => result.increment())
+  expect(result.count).toBe(4)
+  act(() => result.decrement())
+  expect(result.count).toBe(3)
+})
+
+test('allows customization of the step', async () => {
+  // const result = setup({initialProps: {step: 2}})
+  let result
+  function TestComponent() {
+    result = useCounter({step: 2})
+    return null
+  }
+  // 🐨 render the component
+  render(<TestComponent />)
+
+  expect(result.count).toBe(0)
+  act(() => result.increment())
+  expect(result.count).toBe(2)
+  act(() => result.decrement())
+  expect(result.count).toBe(0)
 })
 
 /* eslint no-unused-vars:0 */
