@@ -41,12 +41,26 @@ test('counter increments and decrements when the buttons are clicked', () => {
 
   // 🐨 click the increment button (💰 act(() => increment.click()))
   // 🐨 assert the message.textContent
-  increment.click()
+  const incrementClickEvent = new MouseEvent('click', {
+    bubbles: true,
+    cancelable: true,
+    button: 0, //left click
+  })
+  increment.dispatchEvent(incrementClickEvent)
+  // increment.click()
   expect(message.textContent).toBe('Current count: 1')
+
   // 🐨 click the decrement button (💰 act(() => decrement.click()))
   // 🐨 assert the message.textContent
-  decrement.click()
+  const decrementClickEvent = new MouseEvent('click', {
+    bubbles: true,
+    cancelable: true,
+    button: 0, //left click
+  })
+  decrement.dispatchEvent(incrementClickEvent)
+  // decrement.click()
   expect(message.textContent).toBe('Current count: 0')
+
   // 🐨 cleanup by removing the div from the page (💰 div.remove())
   // 🦉 If you don't cleanup, then it could impact other tests and/or cause a memory leak
   // div.remove() --> No longer needed bc of beforeEach
