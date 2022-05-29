@@ -2,7 +2,7 @@
 // http://localhost:3000/counter-hook
 
 import * as React from 'react'
-import {render, screen} from '@testing-library/react'
+import {render, screen, act} from '@testing-library/react'
 import userEvent from '@testing-library/user-event'
 import useCounter from '../../components/use-counter'
 
@@ -12,28 +12,31 @@ import useCounter from '../../components/use-counter'
 // 💰 here's how to use the hook:
 // const {count, increment, decrement} = useCounter()
 
-/**
- * Make a test component that uses the custom hook in the same way that the custom hook
- * would typically be used
- */
-function UseCounterHookExample() {
-  const {count, increment, decrement} = useCounter()
-  return (
-    <div>
-      <div>Current count: {count}</div>
-      <button onClick={decrement}>Decrement</button>
-      <button onClick={increment}>Increment</button>
-    </div>
-  )
-}
-
 test('exposes the count and increment/decrement functions', async () => {
+  // Use case: difficult to create a component that resembles the way that
+  // people typically use your hook, esp for covering different edge cases
+  let result
+  function TestComponent() {
+    result = useCounter()
+    return null
+  }
   // 🐨 render the component
-  render(<UseCounterHookExample />)
+  render(<TestComponent />)
 
+  expect(result.count).toBe(0)
   /**
-   * Test custom component and got coverage on our custom hook
+   * Use act when you are going to trigger an update
+   * 
+   * After callback is finished (i.e. result.increment()), flush all the side effects,
+   * React useEffect callbacks, etc. so next line of code has a stable component to interact with
+   * - No intermediary state where effects haven't been run yet
+  
    */
+  act(() => result.increment())
+  expect(result.count).toBe(1)
+  act(() => result.decrement())
+  expect(result.count).toBe(0)
+  /*
   // 🐨 get the elements you need using screen
   const increment = screen.getByRole('button', {name: /increment/i})
   const decrement = screen.getByRole('button', {name: /decrement/i})
@@ -46,6 +49,7 @@ test('exposes the count and increment/decrement functions', async () => {
   await userEvent.click(decrement)
   expect(message).toHaveTextContent('Current count: 0')
   // 🐨 interact with the UI using userEvent and assert on the changes in the UI
+  */
 })
 
 /* eslint no-unused-vars:0 */
